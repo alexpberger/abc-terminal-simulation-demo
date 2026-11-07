@@ -1,4 +1,4 @@
-# Build: Berger Container Terminal (BCT) — Discrete-Event Simulation Demo
+# Build: Berger Container Terminal (BCT) — V1 Discrete-Event Simulation Demo
 
 ## Context and overall ambition
 
@@ -16,7 +16,7 @@ The goal is to build something that:
 2. Is easy to understand and inspect as a learning project.
 3. Has a simple but polished Streamlit UI.
 4. Does not over-engineer V1.
-5. Has a clean architecture that can evolve into more sophisticated V2, V3 and V4 versions.
+5. Has a clean architecture that can evolve into more sophisticated future versions.
 
 The central question the simulation should answer is:
 
@@ -113,7 +113,7 @@ Use modern Python project conventions and type hints.
 
 Keep dependencies minimal.
 
-Use a clean Python project setup with explicit dependency management.
+Use a clean and conventional Python project setup with explicit dependency management.
 
 ---
 
@@ -134,7 +134,7 @@ The README must include clear setup instructions covering:
 5. Running the Streamlit application.
 6. Running tests.
 
-For example, a standard setup might look conceptually like:
+For example:
 
 ```bash
 python -m venv .venv
@@ -154,9 +154,7 @@ source .venv/bin/activate
 .venv\Scripts\Activate.ps1
 ```
 
-Then install dependencies using the project's chosen dependency setup.
-
-Choose a simple, conventional approach and ensure the README instructions exactly match the implementation.
+Choose a simple, conventional dependency-management approach and ensure the README instructions exactly match the implementation.
 
 The `.venv` directory should be included in `.gitignore`.
 
@@ -164,7 +162,7 @@ The `.venv` directory should be included in `.gitignore`.
 
 # Important modelling philosophy
 
-Do not attempt to model a real terminal in full detail.
+Do not attempt to model a real container terminal in full detail.
 
 This is a simplified educational/demo simulation.
 
@@ -179,9 +177,9 @@ For example:
 
 The model should allow queues and bottlenecks to emerge from the interaction of resources rather than manually hard-coding bottlenecks.
 
-Be conscious of resource dependencies.
+The V1 model should prioritise:
 
-The V1 model should prioritise **clarity and coherent resource lifecycles** over maximum realism.
+> **Clarity and coherent resource lifecycles over maximum realism.**
 
 ---
 
@@ -216,44 +214,7 @@ Do not introduce unnecessary complexity such as sophisticated crane assignment l
 
 ---
 
-## 2. Step through the actual SimPy simulation
-
-The **Step Through Simulation** functionality is an important learning feature.
-
-Do not implement it by simply running the complete simulation and replaying a precomputed event log.
-
-Instead, investigate and use an appropriate approach for advancing the actual SimPy environment **event by event**.
-
-The user should be able to observe the genuine simulation state evolving as SimPy processes events.
-
-Conceptually:
-
-```text
-Simulation state
-        ↓
-Next discrete event
-        ↓
-Environment advances
-        ↓
-State changes
-        ↓
-Display updated state
-        ↓
-Next discrete event
-```
-
-The implementation should expose meaningful events and state snapshots.
-
-The goal is both:
-
-- Educational: understand how discrete-event simulation evolves.
-- Practical: inspect/debug the model's behaviour.
-
-Keep the implementation pragmatic and understandable.
-
----
-
-## 3. Coherent resource lifecycle
+## 2. Coherent resource lifecycle
 
 Resource lifecycles should be understandable and reasonably coherent.
 
@@ -285,7 +246,11 @@ The truck should remain occupied during its relevant transport and handoff lifec
 
 Do not immediately release resources in a way that produces obviously nonsensical operational behaviour.
 
-However, do not over-model physical details such as individual road networks, exact yard positions or detailed crane dispatching.
+However, do not over-model physical details such as:
+
+- Individual road networks
+- Exact yard positions
+- Detailed crane dispatching
 
 The goal is a simplified but logically coherent operational flow.
 
@@ -396,7 +361,7 @@ Yard crane operation time: fixed
 
 The architecture should make it straightforward for future versions to introduce stochastic/random behaviour.
 
-Do not build Monte Carlo functionality yet unless it comes essentially for free.
+Do not build Monte Carlo functionality yet.
 
 V1 should be reproducible and easy to debug.
 
@@ -457,30 +422,74 @@ when supported by utilisation and waiting-time metrics.
 
 ---
 
+# Simulation observability and event logging
+
+Build basic observability into the simulation from the beginning.
+
+The system should make it possible to inspect:
+
+- Current simulation time
+- Important events
+- Resource usage
+- Queue/waiting behaviour
+
+Create a simple event logging mechanism.
+
+Examples:
+
+```text
+SHIP_ARRIVED
+SHIP_WAITING_FOR_BERTH
+SHIP_BERTH_ASSIGNED
+
+CONTAINER_WAITING_FOR_QUAY_CRANE
+CONTAINER_QUAY_OPERATION_STARTED
+CONTAINER_QUAY_OPERATION_COMPLETED
+
+CONTAINER_WAITING_FOR_TRUCK
+TRUCK_ASSIGNED
+TRUCK_DEPARTED_TO_YARD
+
+CONTAINER_WAITING_FOR_YARD_CRANE
+CONTAINER_STORED
+```
+
+Do not necessarily implement every one of these as a rigid enterprise event architecture.
+
+The purpose is simply to make the simulation behaviour inspectable and understandable.
+
+The event log can also support debugging and future development.
+
+---
+
 # Streamlit application
 
 Build a simple, polished Streamlit application.
+
+The application should focus on:
+
+1. Explaining the simulation.
+2. Allowing the user to configure a scenario.
+3. Running the full simulation.
+4. Presenting results clearly.
 
 Suggested structure:
 
 ```text
 Sidebar
     ├── Navigation
-    ├── Simulation parameters
-    └── Run controls
+    └── Simulation parameters
 
 Main area
     ├── About / explanation
     ├── Simulation controls
-    ├── Simulation state
     └── Results / KPIs
 ```
 
-The app should have at least three main modes/pages:
+The app should have at least two main modes/pages:
 
 1. **About / Explore**
 2. **Run Simulation**
-3. **Step Through Simulation**
 
 This can be implemented using Streamlit navigation, tabs or another simple UX pattern.
 
@@ -623,6 +632,7 @@ The results page should show:
 - Resource utilisation
 - Relevant charts/tables
 - A concise interpretation of results
+- A view of the event log, where useful
 
 Potential charts include:
 
@@ -634,73 +644,6 @@ Do not overcomplicate the visualisation in V1.
 
 ---
 
-# STEP THROUGH SIMULATION
-
-This is an important part of the demo.
-
-The application should make it possible to observe **one individual simulation evolving event by event**.
-
-This should advance the actual SimPy environment rather than replaying precomputed results.
-
-The UI could contain controls such as:
-
-- ▶ Next Event
-- ⏭ Run Next N Events
-- ⏩ Run Until [time]
-- 🔄 Reset
-
-At each step, show the updated state.
-
-For example:
-
-```text
-SIMULATION TIME
-10:32
-
-LATEST EVENT
-Container BCT-C042 acquired terminal truck
-
-CURRENT STATE
-
-Ships waiting: 1
-Ships at berth: 2
-
-Quay cranes:
-4 / 4 busy
-
-Trucks:
-19 / 20 busy
-
-Yard cranes:
-3 / 4 busy
-
-Containers waiting for trucks:
-8
-```
-
-Also show a simple event log:
-
-```text
-10:28  Container BCT-C041 completed quay crane operation
-10:29  Container BCT-C041 acquired truck
-10:31  Container BCT-C042 waiting for truck
-10:32  Container BCT-C042 acquired truck
-```
-
-The user should be able to watch the actual simulation state evolve.
-
-This is partly a **debugging capability**, but the UI should call it something friendlier such as:
-
-> **Step Through Simulation**
-
-or:
-
-> **Simulation Explorer**
-
-The goal is to learn and observe how the discrete-event model evolves.
-
----
-
 # Important architecture requirement
 
 Keep the simulation logic separate from the Streamlit UI.
@@ -708,12 +651,15 @@ Keep the simulation logic separate from the Streamlit UI.
 A suggested structure is:
 
 ```text
-bct-simulation/
+abc-terminal-simulation-demo/
 │
 ├── README.md
 ├── AGENTS.md
 ├── pyproject.toml
 ├── .gitignore
+│
+├── docs/
+│   └── bct-v1-implementation-prompt.md
 │
 ├── src/
 │   └── bct/
@@ -750,47 +696,6 @@ A simple CLI/script-based run should ideally be possible for development and tes
 
 ---
 
-# Simulation observability
-
-Build observability into the simulation from the beginning.
-
-The system should make it possible to inspect:
-
-- Current simulation time
-- Events
-- State
-- Resource usage
-- Queue/waiting behaviour
-
-Create a simple event model or event logging mechanism.
-
-Examples:
-
-```text
-SHIP_ARRIVED
-SHIP_WAITING_FOR_BERTH
-SHIP_BERTH_ASSIGNED
-
-CONTAINER_WAITING_FOR_QUAY_CRANE
-CONTAINER_QUAY_OPERATION_STARTED
-CONTAINER_QUAY_OPERATION_COMPLETED
-
-CONTAINER_WAITING_FOR_TRUCK
-TRUCK_ASSIGNED
-TRUCK_DEPARTED_TO_YARD
-
-CONTAINER_WAITING_FOR_YARD_CRANE
-CONTAINER_STORED
-```
-
-Do not necessarily implement every one of these as a rigid enterprise event architecture.
-
-But design the simulation so its behaviour is inspectable.
-
-This is particularly important for the Step Through Simulation experience.
-
----
-
 # AGENTS.md
 
 Create an `AGENTS.md` file explaining:
@@ -801,6 +706,55 @@ Create an `AGENTS.md` file explaining:
 4. The intended roadmap.
 
 The roadmap should explicitly describe the following future ambitions.
+
+---
+
+## V1 — Deterministic dynamic simulation
+
+The current implementation.
+
+Key characteristics:
+
+- Dynamic
+- Discrete-event
+- Primarily deterministic
+- Individual container processes
+- Shared limited resources
+- Natural queues
+- Full simulation runs
+- KPI and utilisation analysis
+- Basic event logging
+
+---
+
+## Future enhancement — Simulation Explorer
+
+A future enhancement should make it possible to interactively inspect the simulation as it evolves.
+
+The intended capability is:
+
+> Advance the actual SimPy environment event by event and inspect the resulting state.
+
+Potential controls:
+
+- Next Event
+- Run Next N Events
+- Run Until Time
+- Reset
+
+The user should be able to inspect:
+
+- Current simulation time
+- Latest event
+- Resource utilisation/state
+- Queues
+- Ships and containers in the system
+
+Important:
+
+> This should eventually advance the actual SimPy simulation environment, rather than simply replaying a precomputed event log.
+
+This is deliberately **out of scope for the initial V1 implementation**.
 
 ---
 
@@ -946,8 +900,8 @@ Keep:
 - Simulation logic separate from UI
 - Configuration explicit
 - Metrics separated from processes where practical
-- Event/state observability available
-- Randomness injectable/configurable later
+- Event logging/observability available
+- Randomness easy to introduce later
 
 ---
 
@@ -1013,7 +967,7 @@ State the required Python version.
 
 Provide exact instructions for:
 
-1. Cloning/opening the repository.
+1. Opening or cloning the repository.
 2. Creating the local `.venv`.
 3. Activating the environment.
 4. Installing dependencies.
@@ -1054,11 +1008,10 @@ The implementation is successful when I can:
 6. Run the complete simulation with one button.
 7. See meaningful KPIs after the simulation.
 8. See resource utilisation and queue/waiting behaviour.
-9. Step through one actual SimPy simulation and observe the system state changing event by event.
-10. Inspect an event log.
-11. Read an AGENTS.md explaining how the project could evolve through V2, V3 and V4.
-12. Read the simulation code and understand how the main entities, resources and processes interact.
-13. Run a small but meaningful automated test suite.
+9. Inspect a meaningful event log.
+10. Read an AGENTS.md explaining how the project could evolve through future versions.
+11. Read the simulation code and understand how the main entities, resources and processes interact.
+12. Run a small but meaningful automated test suite.
 
 ---
 
@@ -1069,7 +1022,7 @@ Before writing large amounts of code:
 1. Inspect the existing repository.
 2. Propose the final project structure.
 3. Explain the important modelling decisions.
-4. Confirm how the actual SimPy event-by-event stepping will be implemented.
+4. Create a clear implementation plan.
 5. Then implement V1.
 
 If there is ambiguity, prefer a simple, explicit modelling choice and document it rather than overcomplicating the implementation.
@@ -1077,3 +1030,7 @@ If there is ambiguity, prefer a simple, explicit modelling choice and document i
 The goal is not a perfect container-terminal simulator.
 
 The goal is a **real, inspectable, dynamic discrete-event simulation that is educational, visually understandable and a strong foundation for future versions.**
+
+The primary goal of V1 is the simulation engine and a simple interface for configuring and running it.
+
+**Interactive event-by-event stepping is explicitly out of scope for the initial V1 implementation and should remain a future enhancement.**
