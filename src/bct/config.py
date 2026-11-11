@@ -40,3 +40,23 @@ class SimulationConfig:
 def _require_positive_int(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError(f"{name} must be an integer of at least 1")
+
+
+DEFAULT_TERMINAL = "Default terminal"
+ONE_OF_EACH = "One of each"
+
+SCENARIOS: dict[str, SimulationConfig] = {
+    DEFAULT_TERMINAL: SimulationConfig(),
+    ONE_OF_EACH: SimulationConfig(
+        n_berths=1,
+        n_quay_cranes=1,
+        n_trucks=1,
+        n_yard_cranes=1,
+        containers_per_vessel=10,
+        ship_arrival_interval=60.0,
+        simulation_duration=120.0,
+        quay_crane_time=3.0,
+        truck_travel_time=3.0,
+        yard_crane_time=3.0,
+    ),
+}

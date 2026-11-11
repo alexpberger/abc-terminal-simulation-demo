@@ -2,11 +2,27 @@
 
 import pytest
 
-from bct.config import SimulationConfig
+from bct.config import ONE_OF_EACH, SCENARIOS, SimulationConfig
 from bct.domain import EventType
 from bct.simulation import run_simulation
 
 from support import tiny_config
+
+
+def test_named_scenarios_are_the_two_starting_points() -> None:
+    assert SCENARIOS["Default terminal"] == SimulationConfig()
+    assert SCENARIOS[ONE_OF_EACH] == SimulationConfig(
+        n_berths=1,
+        n_quay_cranes=1,
+        n_trucks=1,
+        n_yard_cranes=1,
+        containers_per_vessel=10,
+        ship_arrival_interval=60.0,
+        simulation_duration=120.0,
+        quay_crane_time=3.0,
+        truck_travel_time=3.0,
+        yard_crane_time=3.0,
+    )
 
 
 def test_config_rejects_zero_capacity() -> None:

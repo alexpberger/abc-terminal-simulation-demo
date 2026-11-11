@@ -6,10 +6,12 @@ scenario, runs it, and explains the result.
 
 from __future__ import annotations
 
+from dataclasses import fields
+
 import plotly.graph_objects as go
 import streamlit as st
 
-from bct.config import SimulationConfig
+from bct.config import ONE_OF_EACH, SCENARIOS, SimulationConfig
 from bct.results import (
     SimulationResults,
     event_table,
@@ -208,10 +210,10 @@ def render_run() -> None:
         "so the clock can run past the horizon."
     )
     st.caption(
-        "The default fleet is large for the default traffic, so the first run "
-        "often shows little waiting. Try 2 terminal trucks, or 1 quay crane, "
-        "to see a queue. With few trucks, watch quay-crane busy time rise: a "
-        "crane is held until a truck takes the container."
+        "Default terminal has spare equipment, so the first run often shows "
+        "little waiting. Choose One of each to see a queue. With few trucks, "
+        "quay-crane busy time rises: a crane is held until a truck takes the "
+        "container."
     )
 
     if st.button("▶ Run simulation", type="primary"):
@@ -231,23 +233,56 @@ def render_run() -> None:
     _render_results(results)
 
 
+_SCENARIO = "scenario"
+_SCENARIO_NOTES = {
+    "Default terminal": "A loose fleet. The first run often shows little waiting.",
+    ONE_OF_EACH: (
+        "One machine of each kind. The truck holds the quay crane, and the "
+        "second ship waits for the berth."
+    ),
+}
+
+
+def _apply_selected_scenario() -> None:
+    """Copy the chosen scenario into the sidebar fields before those widgets are built."""
+    config = SCENARIOS[st.session_state[_SCENARIO]]
+    for field in fields(SimulationConfig):
+        st.session_state[field.name] = getattr(config, field.name)
+
+
 def _sidebar_config() -> SimulationConfig:
+    if _SCENARIO not in st.session_state:
+        st.session_state[_SCENARIO] = next(iter(SCENARIOS))
+        _apply_selected_scenario()
+
+    st.sidebar.radio(
+        "Scenario",
+        list(SCENARIOS),
+        key=_SCENARIO,
+        on_change=_apply_selected_scenario,
+    )
+    st.sidebar.caption(_SCENARIO_NOTES[st.session_state[_SCENARIO]])
+
     st.sidebar.header("Terminal")
-    n_berths = int(st.sidebar.number_input("Berths", min_value=1, max_value=20, value=2, step=1))
+    n_berths = int(st.sidebar.number_input("Berths", min_value=1, max_value=20, step=1, key="n_berths"))
     n_quay_cranes = int(
-        st.sidebar.number_input("Quay cranes", min_value=1, max_value=40, value=4, step=1)
+        st.sidebar.number_input("Quay cranes", min_value=1, max_value=40, step=1, key="n_quay_cranes")
     )
     n_trucks = int(
-        st.sidebar.number_input("Terminal trucks", min_value=1, max_value=200, value=20, step=1)
+        st.sidebar.number_input(
+            "Terminal trucks", min_value=1, max_value=200, step=1, key="n_trucks"
+        )
     )
     n_yard_cranes = int(
-        st.sidebar.number_input("Yard cranes", min_value=1, max_value=40, value=4, step=1)
+        st.sidebar.number_input(
+            "Yard cranes", min_value=1, max_value=40, step=1, key="n_yard_cranes"
+        )
     )
 
     st.sidebar.header("Demand")
     containers_per_vessel = int(
         st.sidebar.number_input(
-            "Containers per vessel", min_value=1, max_value=100, value=12, step=1
+            "Containers per vessel", min_value=1, max_value=100, step=1, key="containers_per_vessel"
         )
     )
     ship_arrival_interval = float(
@@ -255,8 +290,8 @@ def _sidebar_config() -> SimulationConfig:
             "Ship arrival interval (min)",
             min_value=1.0,
             max_value=1440.0,
-            value=60.0,
             step=5.0,
+            key="ship_arrival_interval",
         )
     )
     simulation_duration = float(
@@ -264,8 +299,8 @@ def _sidebar_config() -> SimulationConfig:
             "Arrival horizon (min)",
             min_value=1.0,
             max_value=10080.0,
-            value=240.0,
             step=30.0,
+            key="simulation_duration",
             help="Ships arrive while the clock is below this time. Work already started is allowed to finish.",
         )
     )
@@ -273,16 +308,26 @@ def _sidebar_config() -> SimulationConfig:
     with st.sidebar.expander("Operation times (minutes)"):
         st.caption("Fixed for this version. Every container of a kind takes the same time.")
         quay_crane_time = float(
-            st.number_input("Quay crane lift", min_value=0.0, max_value=240.0, value=3.0, step=0.5)
+            st.number_input(
+                "Quay crane lift", min_value=0.0, max_value=240.0, step=0.5, key="quay_crane_time"
+            )
         )
         truck_travel_time = float(
             st.number_input(
-                "Truck travel to the yard", min_value=0.0, max_value=240.0, value=6.0, step=0.5
+                "Truck travel to the yard",
+                min_value=0.0,
+                max_value=240.0,
+                step=0.5,
+                key="truck_travel_time",
             )
         )
         yard_crane_time = float(
             st.number_input(
-                "Yard crane placement", min_value=0.0, max_value=240.0, value=2.0, step=0.5
+                "Yard crane placement",
+                min_value=0.0,
+                max_value=240.0,
+                step=0.5,
+                key="yard_crane_time",
             )
         )
 
