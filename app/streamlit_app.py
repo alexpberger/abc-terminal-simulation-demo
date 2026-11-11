@@ -379,8 +379,17 @@ def _render_results(results: SimulationResults) -> None:
     if events.empty:
         st.write("No events were recorded.")
         return
-    choice = st.selectbox("Event type", ["All events", *list(events["Event"].unique())])
-    visible = events if choice == "All events" else events[events["Event"] == choice]
+    event_col, container_col = st.columns(2)
+    with event_col:
+        choice = st.selectbox("Event type", ["All events", *list(events["Event"].unique())])
+    with container_col:
+        container_ids = [container.container_id for container in results.containers]
+        container_choice = st.selectbox("Container", ["All containers", *container_ids])
+    visible = events
+    if choice != "All events":
+        visible = visible[visible["Event"] == choice]
+    if container_choice != "All containers":
+        visible = visible[visible["Entity"] == container_choice]
     st.dataframe(
         visible,
         hide_index=True,
