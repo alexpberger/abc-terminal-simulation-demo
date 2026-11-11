@@ -64,10 +64,10 @@ def render_about() -> None:
     st.markdown(
         """
 A ship arrives and asks for a berth. If every berth is taken, the ship waits.
-Once it is alongside, each of its containers becomes its own job and competes
-with the others for the same equipment:
+Once the ship has a berth, each container is handled separately. They all need
+the same cranes and trucks, so they wait when those machines are already in use.
 
-1. A **quay crane** lifts the container.
+1. A **quay crane** lifts the container (one container at a time).
 2. The container asks for a **terminal truck** while that crane is still held.
 3. If no truck is free, the container waits and the **crane stays occupied**.
 4. When a truck is assigned, the crane is released and can start another lift.
