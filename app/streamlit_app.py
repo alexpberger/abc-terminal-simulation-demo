@@ -210,10 +210,9 @@ def render_run() -> None:
         "so the clock can run past the horizon."
     )
     st.caption(
-        "Default terminal has spare equipment, so the first run often shows "
-        "little waiting. Choose One of each to see a queue. With few trucks, "
-        "quay-crane busy time rises: a crane is held until a truck takes the "
-        "container."
+        "The default is one yard crane, with ships arriving faster than that "
+        "crane can clear them. Choose One of each to see a single truck hold "
+        "the quay crane."
     )
 
     with st.container(horizontal=True, gap="small"):
@@ -244,7 +243,12 @@ _SCENARIO = "scenario"
 _EVENT_TYPE = "event_type"
 _CONTAINER = "container"
 _SCENARIO_NOTES = {
-    DEFAULT_TERMINAL: "A loose fleet. The first run often shows little waiting.",
+    DEFAULT_TERMINAL: (
+        "A second yard crane cuts makespan from 132 to 84 minutes. A second "
+        "berth cuts it to 105, while container flow slows from 22 to 28 minutes "
+        "as both ships share the yard crane. Doubling quay cranes or trucks "
+        "leaves every ship on the same clock."
+    ),
     ONE_OF_EACH: (
         "One machine of each kind. The truck holds the quay crane, and the "
         "second ship waits for the berth."

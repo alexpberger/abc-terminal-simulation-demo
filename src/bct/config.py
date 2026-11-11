@@ -11,13 +11,13 @@ class SimulationConfig:
     version can replace them with random draws without rewriting the processes.
     """
 
-    n_berths: int = 2
+    n_berths: int = 1
     n_quay_cranes: int = 4
-    n_trucks: int = 20
-    n_yard_cranes: int = 4
+    n_trucks: int = 8
+    n_yard_cranes: int = 1
     containers_per_vessel: int = 12
-    ship_arrival_interval: float = 60.0
-    simulation_duration: float = 240.0
+    ship_arrival_interval: float = 20.0
+    simulation_duration: float = 80.0
     quay_crane_time: float = 3.0
     truck_travel_time: float = 6.0
     yard_crane_time: float = 2.0
