@@ -11,7 +11,7 @@ from dataclasses import fields
 import plotly.graph_objects as go
 import streamlit as st
 
-from bct.config import ONE_OF_EACH, SCENARIOS, SimulationConfig
+from bct.config import DEFAULT_TERMINAL, ONE_OF_EACH, SCENARIOS, SimulationConfig
 from bct.results import (
     SimulationResults,
     event_table,
@@ -216,7 +216,14 @@ def render_run() -> None:
         "container."
     )
 
-    if st.button("▶ Run simulation", type="primary"):
+    with st.container(horizontal=True, gap="small"):
+        run_clicked = st.button("▶ Run simulation", type="primary")
+        st.button(
+            "Reset",
+            help="Clear the results and restore the default scenario.",
+            on_click=_reset_run,
+        )
+    if run_clicked:
         with st.spinner("Running the simulation to completion..."):
             st.session_state["results"] = run_simulation(config)
 
@@ -234,8 +241,10 @@ def render_run() -> None:
 
 
 _SCENARIO = "scenario"
+_EVENT_TYPE = "event_type"
+_CONTAINER = "container"
 _SCENARIO_NOTES = {
-    "Default terminal": "A loose fleet. The first run often shows little waiting.",
+    DEFAULT_TERMINAL: "A loose fleet. The first run often shows little waiting.",
     ONE_OF_EACH: (
         "One machine of each kind. The truck holds the quay crane, and the "
         "second ship waits for the berth."
@@ -250,9 +259,18 @@ def _apply_selected_scenario() -> None:
         st.session_state[field.name] = getattr(config, field.name)
 
 
+def _reset_run() -> None:
+    """Restore the sidebar and clear results, as on the first visit to this page."""
+    st.session_state[_SCENARIO] = DEFAULT_TERMINAL
+    _apply_selected_scenario()
+    st.session_state.pop("results", None)
+    st.session_state.pop(_EVENT_TYPE, None)
+    st.session_state.pop(_CONTAINER, None)
+
+
 def _sidebar_config() -> SimulationConfig:
     if _SCENARIO not in st.session_state:
-        st.session_state[_SCENARIO] = next(iter(SCENARIOS))
+        st.session_state[_SCENARIO] = DEFAULT_TERMINAL
         _apply_selected_scenario()
 
     st.sidebar.radio(
@@ -426,10 +444,10 @@ def _render_results(results: SimulationResults) -> None:
         return
     event_col, container_col = st.columns(2)
     with event_col:
-        choice = st.selectbox("Event type", ["All events", *list(events["Event"].unique())])
+        choice = _select("Event type", ["All events", *list(events["Event"].unique())], _EVENT_TYPE)
     with container_col:
         container_ids = [container.container_id for container in results.containers]
-        container_choice = st.selectbox("Container", ["All containers", *container_ids])
+        container_choice = _select("Container", ["All containers", *container_ids], _CONTAINER)
     visible = events
     if choice != "All events":
         visible = visible[visible["Event"] == choice]
@@ -441,6 +459,13 @@ def _render_results(results: SimulationResults) -> None:
         height=380,
         column_config={"Time (min)": st.column_config.NumberColumn(format="%.1f")},
     )
+
+
+def _select(label: str, options: list[str], key: str) -> str:
+    """Select among options, dropping a stored choice that this run no longer has."""
+    if st.session_state.get(key) not in options:
+        st.session_state[key] = options[0]
+    return str(st.selectbox(label, options, key=key))
 
 
 def _horizon_note(results: SimulationResults) -> str:
